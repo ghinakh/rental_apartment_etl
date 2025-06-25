@@ -1,0 +1,10 @@
+*.env
+__pycache__/
+*.pyc
+*.conda
+venv/
+.env/
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db
+*.json
