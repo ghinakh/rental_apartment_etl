@@ -3,3 +3,4 @@ numpy
 mysql-connector-python
 python-dotenv
 google-cloud-storage
+pyspark
