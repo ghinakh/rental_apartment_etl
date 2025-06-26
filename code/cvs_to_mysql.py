@@ -30,30 +30,6 @@ apart_att = apart_att.replace({np.nan: None})
 table_apart = "apartments"
 table_att = "apartment_attributes"
 
-def generate_create_table(df, table_name="A", custom_type=None):
-    dtype_map = {
-        "object": "VARCHAR(255)",
-        "int64": "INT",
-        "float64": "FLOAT",
-        "bool": "BOOLEAN",
-    }
-
-    if custom_type is None:
-        custom_type = {}
-
-    columns = []
-    for col in df.columns:
-        if col in custom_type:
-            sql_type = custom_type[col]
-        else:
-            dtype = str(df[col].dtype)
-            sql_type = dtype_map.get(dtype, "TEXT")
-
-        columns.append(f"    {col} {sql_type}")
-
-    columns_str = ",\n".join(columns)
-    create_stmt = f"CREATE TABLE {table_name} (\n{columns_str}\n);"
-    return create_stmt
 
 def generate_insert_into(df, table_name="A"):
     columns = df.columns.tolist()
@@ -61,40 +37,39 @@ def generate_insert_into(df, table_name="A"):
     placeholders = ", ".join(["%s"] * len(columns))
     insert_stmt = f"INSERT INTO {table_name} ({columns_str}) VALUES ({placeholders});"
     return insert_stmt
-
-# def clean_batch(df):
-#     # Ubah string 'nan', 'NaN', 'None', '' jadi None
-#     df = df.replace(['nan', 'NaN', 'None', ''], None)
-
-#     # Ubah semua np.nan jadi None
-#     df = df.where(pd.notnull(df), None)
-
-#     return df
-
-# print(apart.head())
-# print(apart.columns)
-# print(apart_att[['has_photo', 'pets_allowed', 'price_display', 'price_type',
-#        'square_feet', 'address', 'cityname', 'state']].head())
-# print(apart_att.columns)
-
-custom_type_apart = {
-    'id': 'VARCHAR(255)',
-    'title': 'TEXT',
-    'listing_created_on': 'DATETIME',
-    'last_modified_timestamp': 'DATETIME'
-}
-
-custom_type_att = {
-    'id': 'VARCHAR(255)',
-    'body': 'TEXT',
-    'amenities': 'TEXT',
-    'latitude': 'DOUBLE',
-    'longitude': 'DOUBLE'
-}
-
-query_create_table_apart = generate_create_table(apart, 'apartments', custom_type_apart)
-query_create_table_att = generate_create_table(apart_att, 'apartment_attributes', custom_type_att)
-
+query_create_table_apart = """
+CREATE TABLE apartments (
+    id VARCHAR(255),
+    title VARCHAR(255),
+    source VARCHAR(255),
+    price INT,
+    currency VARCHAR(10),
+    listing_created_on DATETIME,
+    is_active TINYINT(1),
+    last_modified_timestamp DATETIME
+);
+"""
+query_create_table_att = """
+CREATE TABLE apartment_attributes (
+    id VARCHAR(255),
+    category VARCHAR(255),
+    body TEXT,
+    amenities TEXT,
+    bathrooms FLOAT,
+    bedrooms FLOAT,
+    fee FLOAT,
+    has_photo VARCHAR(10),
+    pets_allowed VARCHAR(10),
+    price_display VARCHAR(255),
+    price_type VARCHAR(50),
+    square_feet INT,
+    address VARCHAR(255),
+    cityname VARCHAR(100),
+    state VARCHAR(50),
+    latitude DOUBLE,
+    longitude DOUBLE
+);
+"""
 query_insert_table_apart = generate_insert_into(apart, 'apartments')
 query_insert_table_att = generate_insert_into(apart_att, 'apartment_attributes')
 
