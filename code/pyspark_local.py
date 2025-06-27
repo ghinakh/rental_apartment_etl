@@ -162,7 +162,7 @@ df_userview = df_userview.withColumn("is_wishlisted", col('is_wishlisted').cast(
 df_userview = check_handling_nan_pyspark(df_userview, "User Viewings")
 df_userview = check_handling_duplicate_pyspark(df_userview, ["user_id","apartment_id"], "User Viewings")
 fact_userview = df_userview.select("*")
-fact_userview.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver/user_viewings_cleaned.parquet')
+fact_userview.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver_sample/user_viewings_cleaned.parquet')
 df_userview.unpersist()
 
 # DF APARTMENTS
@@ -175,14 +175,14 @@ df_apart = df_apart.withColumn("is_active", col('is_active').cast('boolean'))
 df_apart = check_handling_nan_pyspark(df_apart, "Apartment")
 df_apart = check_handling_duplicate_pyspark(df_apart, ["id"], "Apartment")
 dim_apart = df_apart.select("*")
-dim_apart.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver/apartments_cleaned.parquet')
+dim_apart.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver_sample/apartments_cleaned.parquet')
 df_apart.unpersist()
 
 # DF APARTMENT ATTRIBUTES
 df_att = check_handling_nan_pyspark(df_att, "Apartment Attributes")
 df_att = check_handling_duplicate_pyspark(df_att, ["id"], "Apartment Attributes")
 dim_att = df_att.select("*")
-dim_att.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver/apartment_attributes_cleaned.parquet')
+dim_att.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver_sample/apartment_attributes_cleaned.parquet')
 df_att.unpersist()
 
 # JOIN
@@ -320,12 +320,12 @@ df_full.unpersist()
 
 print("Cleaned Transform Aggregation Success")
 
-df_full.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver/rentapart_fulldetailed_cleaned.parquet')
-df_apartment_perf.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver/kpi_apartment_performance.parquet')
-df_hour_kpi.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver/kpi_hour_summary.parquet')
-df_dom_kpi.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver/kpi_dayofmonth_summary.parquet')
-df_state_kpi.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver/kpi_state.parquet')
-df_platform_kpi.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver/kpi_platform.parquet')
+df_full.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver_sample/rentapart_fulldetailed_cleaned.parquet')
+df_apartment_perf.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver_sample/kpi_apartment_performance.parquet')
+df_hour_kpi.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver_sample/kpi_hour_summary.parquet')
+df_dom_kpi.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver_sample/kpi_dayofmonth_summary.parquet')
+df_state_kpi.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver_sample/kpi_state.parquet')
+df_platform_kpi.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver_sample/kpi_platform.parquet')
 
 print("Load Success")
 
