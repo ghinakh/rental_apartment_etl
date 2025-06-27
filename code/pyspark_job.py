@@ -123,9 +123,16 @@ def check_handling_duplicate_pyspark(df, id_column, name):
 
     return df
 
-spark = (SparkSession.builder
-         .appName('rental_apartment_app')
-         .getOrCreate())
+spark = (
+    SparkSession.builder
+    .appName('rental_apartment_app')
+    .config('spark.executor.memory', '4g')           # Aman di 5g, bisa ke 6g, tapi mending kasih napas ke OS
+    .config('spark.executor.cores', '2')             # Maksimal core per VM
+    .config('spark.executor.instances', '2')         # 2 executor, masing-masing di 1 worker
+    .config('spark.driver.memory', '1g')             # Driver node bisa ambil 2g
+    .config('spark.sql.shuffle.partitions', '2')     # Untuk data 50 ribuan ini cukup
+    .getOrCreate()
+)
 
 print("Start Spark Session")
 
@@ -143,6 +150,8 @@ df_att = df_att.cache()
 df_userview = df_userview.cache()
 
 print("Read Success")
+
+print(df_userview.show())
 
 # DF USER VIEWINGS
 timestamp_cols = [
