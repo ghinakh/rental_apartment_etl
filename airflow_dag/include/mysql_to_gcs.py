@@ -4,10 +4,7 @@ import pandas as pd
 import mysql.connector
 from mysql.connector import Error
 from google.cloud import storage
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 print(os.environ["GOOGLE_APPLICATION_CREDENTIALS"])
 
@@ -19,7 +16,7 @@ password = os.getenv("MYSQL_PASSWORD")
 database = "rental_apartment_app"
 
 # GCS configuration
-bucket_name = os.getenv("GCP_BUCKET_NAME")
+bucket_name = os.getenv("GCP_BUCKET")
 
 def upload_to_gcs(bucket_name, destination_blob_name, local_file):
     client = storage.Client.from_service_account_json(os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))
