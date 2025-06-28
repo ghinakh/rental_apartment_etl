@@ -6,3 +6,4 @@ google-cloud-storage
 google-cloud-dataproc
 google-cloud-bigquery
 apache-airflow-providers-google
+gcsfs

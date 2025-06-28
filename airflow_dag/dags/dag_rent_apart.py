@@ -31,7 +31,7 @@ CLUSTER_CONFIG = {
 
 with DAG(
     dag_id="dev-dag-dataproc",
-    schedule="30 6 * * *",  # Jam 13:30 WIB setiap hari
+    schedule="0 0 * * *",  # Jam 07:00 WIB setiap hari
     start_date=datetime(2025, 6, 27),
     catchup=False,
     tags=["portofolio"]
@@ -67,7 +67,10 @@ with DAG(
         "placement": {"cluster_name": CLUSTER_NAME},
         "pyspark_job": {
             "main_python_file_uri": PYSPARK_URI,
-            "args": ["--bucket_name", BUCKET_NAME]
+            "args": [
+                "--bucket_name", BUCKET_NAME,
+                "--date_logic", "2025-06-27"  # ubah di sini kalau mau ganti
+            ]
         }
     }
 
@@ -87,4 +90,10 @@ with DAG(
         trigger_rule=TriggerRule.ALL_DONE
     )
 
-    extract_task >> create_cluster >> upload_to_gcs >> submit_job >> delete_cluster
+    # Task6: Load data from GCS to BigQuery
+    load_task = BashOperator(
+        task_id='gcs_to_bq', 
+        bash_command='python /usr/local/airflow/include/gcs_to_bq.py' 
+    ) 
+
+    extract_task >> create_cluster >> upload_to_gcs >> submit_job >> delete_cluster >> load_task

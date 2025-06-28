@@ -7,9 +7,11 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--bucket_name', required=True)
+parser.add_argument('--date_logic', required=True)  # Diinput manual
 args = parser.parse_args()
 
 bucket_name = args.bucket_name
+date_logic = args.date_logic
 database="rental_apartment_app"
 
 def check_handle_timestamp_pyspark(df, timestamp_cols):
@@ -143,7 +145,7 @@ schema_att = 'id STRING, category STRING, body STRING, amenities STRING, bathroo
 
 df_apart = spark.read.json(f'gs://{bucket_name}/{database}/apartments/apartments_batch*.json', schema=schema_apart)
 df_att = spark.read.json(f'gs://{bucket_name}/{database}/apartment_attributes/apartment_attributes_batch*.json', schema=schema_att)
-df_userview = spark.read.json(f'gs://{bucket_name}/{database}/confluent_topic/user_viewings_batch*.json',  schema=schema_userview)
+df_userview = spark.read.json(f'gs://{bucket_name}/{database}/confluent_topic/user_viewings/dt={date_logic}',  schema=schema_userview)
 
 df_apart = df_apart.cache()
 df_att = df_att.cache()
