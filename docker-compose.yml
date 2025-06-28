@@ -6,7 +6,7 @@ services:
     volumes:
       - .:/app
     environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/service_account_gcp.json
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/service_account.json
     command: >
       spark-submit
       --jars /opt/bitnami/spark/jars/gcs-connector-hadoop3-latest.jar

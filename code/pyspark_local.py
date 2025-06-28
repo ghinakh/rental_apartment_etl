@@ -8,7 +8,7 @@ from pyspark.sql.window import Window
 # local development import
 import os
 base_dir = os.getcwd()
-credential_path = os.path.join(base_dir, "service_account_gcp.json")
+credential_path = os.path.join(base_dir, "service_account.json")
 print(credential_path)
 
 from dotenv import load_dotenv

@@ -13,7 +13,7 @@ COPY /code/pyspark_local.py /app/code
 COPY /data/user_viewings.csv /app/data
 
 # Copy service account json
-COPY service_account_gcp.json /app/credentials/service_account_gcp.json
+COPY service_account.json /app/credentials/service_account.json
 
 WORKDIR /app
 
