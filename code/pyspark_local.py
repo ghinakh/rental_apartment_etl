@@ -136,7 +136,7 @@ spark = (SparkSession.builder
 
 print("Start Spark Session")
 
-user_view = pd.read_csv(os.path.join(base_dir, "data", "user_viewings.csv"))
+user_view = pd.read_csv(os.path.join(base_dir, "data", "user_viewings_new.csv"))
 
 # define schema
 schema_userview = 'user_id STRING, apartment_id STRING, viewed_at STRING, is_wishlisted STRING, call_to_action STRING'
