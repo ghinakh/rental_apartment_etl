@@ -69,7 +69,7 @@ with DAG(
             "main_python_file_uri": PYSPARK_URI,
             "args": [
                 "--bucket_name", BUCKET_NAME,
-                "--date_logic", "2025-06-27"  # ubah di sini kalau mau ganti
+                "--date_logic", "2025-06-28"  # ubah di sini kalau mau ganti
             ]
         }
     }
@@ -93,7 +93,10 @@ with DAG(
     # Task6: Load data from GCS to BigQuery
     load_task = BashOperator(
         task_id='gcs_to_bq', 
-        bash_command='python /usr/local/airflow/include/gcs_to_bq.py' 
+        bash_command='python /usr/local/airflow/include/gcs_to_bq.py --date_logic 2025-06-28', # ubah di sini kalau mau ganti
+        trigger_rule='all_success' 
     ) 
 
     extract_task >> create_cluster >> upload_to_gcs >> submit_job >> delete_cluster >> load_task
+    submit_job >> load_task
+    delete_cluster >> load_task
