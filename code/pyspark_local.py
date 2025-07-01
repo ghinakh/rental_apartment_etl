@@ -1,16 +1,21 @@
 # cloud import
 from pyspark.sql import SparkSession
+database="rental_apartment_app"
 from pyspark.sql.functions import *
 from pyspark.sql.types import StringType, TimestampType, DateType, NumericType, BooleanType
 from pyspark.sql.window import Window
-import argparse
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--bucket_name', required=True)
-args = parser.parse_args()
+# local development import
+import os
+base_dir = os.getcwd()
+credential_path = os.path.join(base_dir, "service_account.json")
+print(credential_path)
 
-bucket_name = args.bucket_name
-database="rental_apartment_app"
+from dotenv import load_dotenv
+load_dotenv()
+bucket_name = os.getenv("GCP_BUCKET_NAME")
+
+import pandas as pd
 
 def check_handle_timestamp_pyspark(df, timestamp_cols):
     # List of supported formats: regex + parsing format
@@ -123,18 +128,15 @@ def check_handling_duplicate_pyspark(df, id_column, name):
 
     return df
 
-spark = (
-    SparkSession.builder
-    .appName('rental_apartment_app')
-    .config('spark.executor.memory', '4g')           # Aman di 5g, bisa ke 6g, tapi mending kasih napas ke OS
-    .config('spark.executor.cores', '2')             # Maksimal core per VM
-    .config('spark.executor.instances', '2')         # 2 executor, masing-masing di 1 worker
-    .config('spark.driver.memory', '1g')             # Driver node bisa ambil 2g
-    .config('spark.sql.shuffle.partitions', '2')     # Untuk data 50 ribuan ini cukup
-    .getOrCreate()
-)
+spark = (SparkSession.builder
+         .appName('Local GCS Read')
+         .config('spark.hadoop.google.cloud.auth.service.account.enable', 'true')
+         .config('spark.hadoop.google.cloud.auth.service.account.json.keyfile', credential_path)
+         .getOrCreate())
 
 print("Start Spark Session")
+
+user_view = pd.read_csv(os.path.join(base_dir, "data", "user_viewings_new.csv"))
 
 # define schema
 schema_userview = 'user_id STRING, apartment_id STRING, viewed_at STRING, is_wishlisted STRING, call_to_action STRING'
@@ -143,15 +145,13 @@ schema_att = 'id STRING, category STRING, body STRING, amenities STRING, bathroo
 
 df_apart = spark.read.json(f'gs://{bucket_name}/{database}/apartments/apartments_batch*.json', schema=schema_apart)
 df_att = spark.read.json(f'gs://{bucket_name}/{database}/apartment_attributes/apartment_attributes_batch*.json', schema=schema_att)
-df_userview = spark.read.json(f'gs://{bucket_name}/{database}/confluent_topic/user_viewings_batch*.json',  schema=schema_userview)
+df_userview = spark.createDataFrame(user_view, schema=schema_userview)
 
 df_apart = df_apart.cache()
 df_att = df_att.cache()
 df_userview = df_userview.cache()
 
 print("Read Success")
-
-print(df_userview.show())
 
 # DF USER VIEWINGS
 timestamp_cols = [
@@ -162,7 +162,7 @@ df_userview = df_userview.withColumn("is_wishlisted", col('is_wishlisted').cast(
 df_userview = check_handling_nan_pyspark(df_userview, "User Viewings")
 df_userview = check_handling_duplicate_pyspark(df_userview, ["user_id","apartment_id"], "User Viewings")
 fact_userview = df_userview.select("*")
-fact_userview.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver/user_viewings_cleaned.parquet')
+fact_userview.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver_sample/user_viewings_cleaned.parquet')
 df_userview.unpersist()
 
 # DF APARTMENTS
@@ -175,14 +175,14 @@ df_apart = df_apart.withColumn("is_active", col('is_active').cast('boolean'))
 df_apart = check_handling_nan_pyspark(df_apart, "Apartment")
 df_apart = check_handling_duplicate_pyspark(df_apart, ["id"], "Apartment")
 dim_apart = df_apart.select("*")
-dim_apart.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver/apartments_cleaned.parquet')
+dim_apart.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver_sample/apartments_cleaned.parquet')
 df_apart.unpersist()
 
 # DF APARTMENT ATTRIBUTES
 df_att = check_handling_nan_pyspark(df_att, "Apartment Attributes")
 df_att = check_handling_duplicate_pyspark(df_att, ["id"], "Apartment Attributes")
 dim_att = df_att.select("*")
-dim_att.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver/apartment_attributes_cleaned.parquet')
+dim_att.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver_sample/apartment_attributes_cleaned.parquet')
 df_att.unpersist()
 
 # JOIN
@@ -320,12 +320,12 @@ df_full.unpersist()
 
 print("Cleaned Transform Aggregation Success")
 
-df_full.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver/rentapart_fulldetailed_cleaned.parquet')
-df_apartment_perf.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver/kpi_apartment_performance.parquet')
-df_hour_kpi.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver/kpi_hour_summary.parquet')
-df_dom_kpi.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver/kpi_dayofmonth_summary.parquet')
-df_state_kpi.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver/kpi_state.parquet')
-df_platform_kpi.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver/kpi_platform.parquet')
+df_full.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver_sample/rentapart_fulldetailed_cleaned.parquet')
+df_apartment_perf.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver_sample/kpi_apartment_performance.parquet')
+df_hour_kpi.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver_sample/kpi_hour_summary.parquet')
+df_dom_kpi.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver_sample/kpi_dayofmonth_summary.parquet')
+df_state_kpi.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver_sample/kpi_state.parquet')
+df_platform_kpi.write.mode('overwrite').parquet(f'gs://{bucket_name}/{database}/silver_sample/kpi_platform.parquet')
 
 print("Load Success")
 
